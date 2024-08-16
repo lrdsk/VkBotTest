@@ -2,6 +2,7 @@ package org.example.VkBotTest.services.servicesImpl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.VkBotTest.exceptions.VkApiException;
 import org.example.VkBotTest.services.BotMessageService;
 import org.example.VkBotTest.util.MessageType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,13 +10,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Service
 public class BotMessageServiceImpl implements BotMessageService {
-
 
     @Value("${TOKEN}")
     private String TOKEN;
@@ -28,6 +32,8 @@ public class BotMessageServiceImpl implements BotMessageService {
 
     private final ObjectMapper objectMapper;
 
+    private static final Logger logger = LoggerFactory.getLogger(BotMessageServiceImpl.class);
+
     @Autowired
     public BotMessageServiceImpl(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -36,7 +42,7 @@ public class BotMessageServiceImpl implements BotMessageService {
     @Override
     public ResponseEntity<String> callback(String body) {
         try {
-            Map<String, Object> data = objectMapper.readValue(body,  new TypeReference<Map<String, Object>>(){});
+            Map<String, Object> data = objectMapper.readValue(body,  new TypeReference<>(){});
             String type = (String) data.get("type");
 
             if(MessageType.CONFIRMATION.getType().equals(type)){
@@ -56,33 +62,35 @@ public class BotMessageServiceImpl implements BotMessageService {
 
             return ResponseEntity.ok("Ok");
 
-        }catch (Exception e){
-            e.printStackTrace();
+        }catch (VkApiException e){
+            logger.error("Vk API error: {}", e.getMessage(),e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e){
+            logger.error("Error processing request: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing request");
         }
     }
 
-    private void sendMessage(long userId, String message) {
-        try {
-            String encodedMessage = URLEncoder.encode(message, "UTF-8");
-            String url = "https://api.vk.com/method/messages.send?access_token=" + TOKEN + "&v=" + API_VERSION;
+    private void sendMessage(long userId, String message) throws VkApiException{
+        String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
+        String url = "https://api.vk.com/method/messages.send?access_token=" + TOKEN + "&v=" + API_VERSION;
 
-            String params = "peer_id=" + userId + "&message=" + encodedMessage + "&random_id=" + System.currentTimeMillis();
+        String params = "peer_id=" + userId + "&message=" + encodedMessage + "&random_id=" + System.currentTimeMillis();
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-            HttpEntity<String> requestEntity = new HttpEntity<>(params, headers);
+        HttpEntity<String> requestEntity = new HttpEntity<>(params, headers);
 
-            RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
 
-            ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
-            System.out.println(response.getBody());
+        ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (response.getStatusCode() != HttpStatus.OK) {
+            throw new VkApiException("Failed to send message to VK API: " + response.getBody());
         }
-    }
 
+        logger.info("Message sent successfully: {}", response.getBody());
+    }
 
 }
