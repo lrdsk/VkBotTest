@@ -13,7 +13,6 @@ import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -32,11 +31,14 @@ public class BotMessageServiceImpl implements BotMessageService {
 
     private final ObjectMapper objectMapper;
 
+    private final RestTemplate restTemplate;
+
     private static final Logger logger = LoggerFactory.getLogger(BotMessageServiceImpl.class);
 
     @Autowired
-    public BotMessageServiceImpl(ObjectMapper objectMapper) {
+    public BotMessageServiceImpl(ObjectMapper objectMapper, RestTemplate restTemplate) {
         this.objectMapper = objectMapper;
+        this.restTemplate = restTemplate;
     }
 
     @Override
@@ -54,36 +56,30 @@ public class BotMessageServiceImpl implements BotMessageService {
                 Map<String, Object> messageContent = (Map<String, Object>) messageData.get("message");
 
                 Integer userId = (Integer) messageContent.get("from_id");
-
                 String messageText = (String) messageContent.get("text");
                 String responseMessage = "Вы сказали: " + messageText;
+
                 sendMessage(userId, responseMessage);
             }
 
             return ResponseEntity.ok("Ok");
 
         }catch (VkApiException e){
-            logger.error("Vk API error: {}", e.getMessage(),e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return handleError(e, HttpStatus.BAD_REQUEST);
         } catch (Exception e){
-            logger.error("Error processing request: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing request");
+            return handleError(e, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     private void sendMessage(long userId, String message) throws VkApiException{
         String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
         String url = "https://api.vk.com/method/messages.send?access_token=" + TOKEN + "&v=" + API_VERSION;
-
         String params = "peer_id=" + userId + "&message=" + encodedMessage + "&random_id=" + System.currentTimeMillis();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(params, headers);
-
-        RestTemplate restTemplate = new RestTemplate();
-
         ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
 
         if (response.getStatusCode() != HttpStatus.OK) {
@@ -93,4 +89,8 @@ public class BotMessageServiceImpl implements BotMessageService {
         logger.info("Message sent successfully: {}", response.getBody());
     }
 
+    private ResponseEntity<String> handleError(Exception e, HttpStatus httpStatus){
+        logger.error("Error: {}", e.getMessage(), e);
+        return ResponseEntity.status(httpStatus).body(e.getMessage());
+    }
 }

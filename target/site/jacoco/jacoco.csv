@@ -1,0 +1,7 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+VkBotTest,org.example.VkBotTest.exceptions,VkApiException,4,0,0,0,2,0,1,0,1,0
+VkBotTest,org.example.VkBotTest,VkBotTestApplication,5,7,0,0,2,2,1,2,1,2
+VkBotTest,org.example.VkBotTest.util,MessageType,0,28,0,0,0,7,0,3,0,3
+VkBotTest,org.example.VkBotTest.services.servicesImpl,BotMessageServiceImpl,14,139,2,4,3,31,2,6,0,5
+VkBotTest,org.example.VkBotTest.services.servicesImpl,BotMessageServiceImpl.new TypeReference() {...},0,6,0,0,0,1,0,1,0,1
+VkBotTest,org.example.VkBotTest.controllers,VkBotController,0,11,0,0,0,4,0,2,0,2

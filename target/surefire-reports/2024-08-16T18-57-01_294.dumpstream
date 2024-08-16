@@ -1,0 +1,5 @@
+# Created at 2024-08-16T18:57:01.537
+Boot Manifest-JAR contains absolute paths in classpath 'D:\JavaProjects\job\hh_ru\Just_AI\VkBotTest\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+

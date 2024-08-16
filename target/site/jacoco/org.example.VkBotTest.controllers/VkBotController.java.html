@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VkBotController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">VkBotTest</a> &gt; <a href="index.source.html" class="el_package">org.example.VkBotTest.controllers</a> &gt; <span class="el_source">VkBotController.java</span></div><h1>VkBotController.java</h1><pre class="source lang-java linenums">package org.example.VkBotTest.controllers;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.example.VkBotTest.services.servicesImpl.BotMessageServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class VkBotController {
+    private final BotMessageServiceImpl botMessageService;
+
+    @Autowired
+<span class="fc" id="L18">    public VkBotController(BotMessageServiceImpl botMessageService) {</span>
+<span class="fc" id="L19">        this.botMessageService = botMessageService;</span>
+<span class="fc" id="L20">    }</span>
+
+    @Operation(summary = &quot;Callback для обработки сообщений от VK&quot;,
+            description = &quot;Получает сообщение от VK, обрабатывает его и отправляет ответ.&quot;)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Сообщение успешно обработано&quot;),
+            @ApiResponse(responseCode = &quot;500&quot;, description = &quot;Ошибка при обработке сообщения&quot;)
+    })
+    @PostMapping(&quot;/&quot;)
+    public ResponseEntity&lt;String&gt; callback(@RequestBody String body){
+<span class="fc" id="L30">        return botMessageService.callback(body);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
